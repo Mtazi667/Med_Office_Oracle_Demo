@@ -5,8 +5,8 @@ import client from '../api/client';
 
 export default function MedecinForm() {
     const { id } = useParams();
-    const navigate = useNavigate();
     const isEdit = Boolean(id);
+    const navigate = useNavigate();
 
     const [form, setForm] = useState({
         nom: '',
@@ -21,23 +21,20 @@ export default function MedecinForm() {
                     const { NOM, SPECIALITE, TELEPHONE } = res.data;
                     setForm({ nom: NOM, specialite: SPECIALITE, telephone: TELEPHONE });
                 })
-                .catch(err => console.error(err));
+                .catch(console.error);
         }
     }, [id, isEdit]);
 
     const handleChange = e => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        setForm(f => ({ ...f, [name]: value }));
     };
 
     const handleSubmit = async e => {
         e.preventDefault();
         try {
-            if (isEdit) {
-                await client.put(`/medecins/${id}`, form);
-            } else {
-                await client.post('/medecins', form);
-            }
+            if (isEdit) await client.put(`/medecins/${id}`, form);
+            else await client.post('/medecins', form);
             navigate('/medecins');
         } catch (err) {
             console.error(err);
@@ -47,7 +44,7 @@ export default function MedecinForm() {
     return (
         <div className="p-4 max-w-md mx-auto">
             <h2 className="text-xl font-semibold mb-4">
-                {isEdit ? 'Modifier le médecin' : 'Nouveau médecin'}
+                {isEdit ? 'Modifier un médecin' : 'Nouveau médecin'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <TextField

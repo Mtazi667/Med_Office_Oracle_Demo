@@ -70,5 +70,36 @@ router.delete('/:id', async (req, res) => {
     if (result.rowsAffected === 0) return res.sendStatus(404);
     res.json({ message: 'Médecin supprimé' });
 });
+router.delete('/:id', async (req, res) => {
+    const id = +req.params.id;
+    let conn;
+    try {
+        conn = await getConnection();
 
+        // 1) supprimer tous les RDV liés à ce médecin
+        await conn.execute(
+            `DELETE FROM RENDEZVOUS WHERE ID_MEDECIN = :id`,
+            [id]
+        );
+
+        // 2) supprimer le médecin
+        const result = await conn.execute(
+            `DELETE FROM MEDECIN WHERE ID_MEDECIN = :id`,
+            [id]
+        );
+
+        await conn.commit();
+
+        if (result.rowsAffected === 0) {
+            return res.sendStatus(404);
+        }
+        res.sendStatus(204);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        if (conn) await conn.close();
+    }
+});
 export default router;

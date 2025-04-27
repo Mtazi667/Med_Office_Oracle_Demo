@@ -1,17 +1,36 @@
+// src/components/TraitementList.jsx
 import React, { useEffect, useState } from 'react';
 import client from '../api/client';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button } from '@mui/material';
+import { Button, Box, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 
 export default function TraitementList() {
     const [rows, setRows] = useState([]);
 
+    const fetchData = async () => {
+        try {
+            const res = await client.get('/traitements');
+            setRows(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
-        client.get('/traitements')
-            .then(res => setRows(res.data))
-            .catch(err => console.error(err));
+        fetchData();
     }, []);
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Supprimer ce traitement ?')) return;
+        try {
+            await client.delete(`/traitements/${id}`);
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            alert('Erreur lors de la suppression');
+        }
+    };
 
     const columns = [
         { field: 'ID_TRAITEMENT', headerName: 'ID', width: 80 },
@@ -21,7 +40,7 @@ export default function TraitementList() {
         {
             field: 'actions',
             headerName: 'Actions',
-            width: 200,
+            width: 290,
             renderCell: (params) => (
                 <>
                     <Button
@@ -35,9 +54,17 @@ export default function TraitementList() {
                         component={Link}
                         to="/traitements/new"
                         size="small"
-                        style={{ marginLeft: 8 }}
+                        sx={{ ml: 1 }}
                     >
                         Nouveau
+                    </Button>
+                    <Button
+                        color="error"
+                        size="small"
+                        sx={{ ml: 1 }}
+                        onClick={() => handleDelete(params.row.ID_TRAITEMENT)}
+                    >
+                        Supprimer
                     </Button>
                 </>
             )
@@ -45,16 +72,16 @@ export default function TraitementList() {
     ];
 
     return (
-        <div className="p-4">
-            <h2 className="text-xl font-semibold mb-4">Liste des traitements</h2>
-            <div style={{ height: 450, width: '100%' }}>
+        <Box p={4}>
+            <Typography variant="h4" mb={2}>Liste des traitements</Typography>
+            <Box sx={{ height: 450, width: '100%' }}>
                 <DataGrid
                     rows={rows}
                     columns={columns}
-                    getRowId={row => row.ID_TRAITEMENT}
+                    getRowId={(row) => row.ID_TRAITEMENT}
                     pageSize={5}
                 />
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 }

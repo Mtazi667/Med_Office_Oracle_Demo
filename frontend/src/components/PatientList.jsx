@@ -1,45 +1,78 @@
 import React, { useEffect, useState } from 'react';
 import client from '../api/client';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 
 export default function PatientList() {
     const [rows, setRows] = useState([]);
 
-    useEffect(() => {
+    const fetchRows = () => {
         client.get('/patients')
             .then(res => setRows(res.data))
-            .catch(err => console.error(err));
-    }, []);
+            .catch(console.error);
+    };
+
+    useEffect(fetchRows, []);
+
+    const handleDelete = async (id) => {
+        if (!window.confirm("Supprimer ce patient ?")) return;
+        try {
+            await client.delete(`/patients/${id}`);
+            fetchRows();
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     const columns = [
-        { field: 'ID_PATIENT', headerName: 'ID', width: 70 },
-        { field: 'NOM', headerName: 'Nom', width: 130 },
-        { field: 'PRENOM', headerName: 'Prénom', width: 130 },
-        { field: 'ADRESSE', headerName: 'Adresse', width: 200 },
-        { field: 'TELEPHONE', headerName: 'Téléphone', width: 130 },
+        { field: 'ID_PATIENT', headerName: 'ID', width: 80 },
+        { field: 'NOM', headerName: 'Nom', width: 150 },
+        { field: 'PRENOM', headerName: 'Prénom', width: 150 },
+        { field: 'ADRESSE', headerName: 'Adresse', width: 300 },
+        { field: 'TELEPHONE', headerName: 'Téléphone', width: 150 },
         {
             field: 'actions',
             headerName: 'Actions',
-            width: 150,
-            renderCell: (params) => (
-                <Button component={Link} to={`/patients/${params.row.ID_PATIENT}/edit`}>Éditer</Button>
+            width: 240,
+            renderCell: params => (
+                <>
+                    <Button
+                        component={Link}
+                        to={`/patients/${params.row.ID_PATIENT}/edit`}
+                        size="small"
+                        sx={{ mr: 1 }}
+                    >
+                        Éditer
+                    </Button>
+                    <Button
+                        color="error"
+                        size="small"
+                        onClick={() => handleDelete(params.row.ID_PATIENT)}
+                    >
+                        Supprimer
+                    </Button>
+                </>
             )
         }
     ];
 
     return (
-        <div className="p-4">
-            <h2 className="text-xl font-semibold mb-4">Liste des patients</h2>
-            <div style={{ height: 400, width: '100%' }}>
+        <Box sx={{ textAlign: 'center' }}>
+            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h2">Liste des patients</Typography>
+                <Button component={Link} to="/patients/new" variant="contained" color="primary">
+                    Nouveau Patient
+                </Button>
+            </Box>
+            <Box sx={{ height: 450, width: '100%', mx: 'auto' }}>
                 <DataGrid
                     rows={rows}
                     columns={columns}
-                    getRowId={(row) => row.ID_PATIENT}
-                    pageSize={5}
+                    getRowId={r => r.ID_PATIENT}
+                    pageSize={10}
                 />
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 }

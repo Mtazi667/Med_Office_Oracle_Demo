@@ -79,5 +79,29 @@ router.delete('/:id', async (req, res) => {
     if (result.rowsAffected === 0) return res.sendStatus(404);
     res.json({ message: 'Rendez-vous supprimé' });
 });
+router.delete('/:id', async (req, res) => {
+    const id = +req.params.id;
+    let conn;
+    try {
+        conn = await getConnection();
 
+        const result = await conn.execute(
+            `DELETE FROM RENDEZVOUS WHERE ID_RDV = :id`,
+            [id]
+        );
+
+        await conn.commit();
+
+        if (result.rowsAffected === 0) {
+            return res.sendStatus(404);
+        }
+        res.sendStatus(204);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    } finally {
+        if (conn) await conn.close();
+    }
+});
 export default router;

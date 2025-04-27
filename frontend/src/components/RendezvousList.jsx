@@ -2,28 +2,46 @@
 import React, { useEffect, useState } from 'react';
 import client from '../api/client';
 import { DataGrid } from '@mui/x-data-grid';
-import { Button } from '@mui/material';
+import { Button, Box, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 
 export default function RendezvousList() {
     const [rows, setRows] = useState([]);
 
+    const fetchData = async () => {
+        try {
+            const res = await client.get('/rendezvous');
+            setRows(res.data);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
-        client.get('/rendezvous')
-            .then(res => setRows(res.data))
-            .catch(err => console.error(err));
+        fetchData();
     }, []);
 
+    const handleDelete = async (id) => {
+        if (!window.confirm('Supprimer ce rendez-vous ?')) return;
+        try {
+            await client.delete(`/rendezvous/${id}`);
+            fetchData();
+        } catch (err) {
+            console.error(err);
+            alert('Erreur lors de la suppression');
+        }
+    };
+
     const columns = [
-        { field: 'ID_RDV', headerName: 'ID', width: 70 },
-        { field: 'DATE_RDV', headerName: 'Date', width: 130 },
-        { field: 'HEURE_RDV', headerName: 'Heure', width: 100 },
+        { field: 'ID_RDV', headerName: 'ID', width: 80 },
+        { field: 'DATE_RDV', headerName: 'Date', width: 150 },
+        { field: 'HEURE_RDV', headerName: 'Heure', width: 120 },
         { field: 'ID_PATIENT', headerName: 'Patient ID', width: 120 },
         { field: 'ID_MEDECIN', headerName: 'Médecin ID', width: 120 },
         {
             field: 'actions',
             headerName: 'Actions',
-            width: 200,
+            width: 290,
             renderCell: (params) => (
                 <>
                     <Button
@@ -37,9 +55,17 @@ export default function RendezvousList() {
                         component={Link}
                         to="/rendezvous/new"
                         size="small"
-                        style={{ marginLeft: 8 }}
+                        sx={{ ml: 1 }}
                     >
                         Nouveau
+                    </Button>
+                    <Button
+                        color="error"
+                        size="small"
+                        sx={{ ml: 1 }}
+                        onClick={() => handleDelete(params.row.ID_RDV)}
+                    >
+                        Supprimer
                     </Button>
                 </>
             )
@@ -47,20 +73,16 @@ export default function RendezvousList() {
     ];
 
     return (
-        <div className="flex justify-center p-4">
-            <div className="w-full max-w-4xl">
-                <h2 className="text-2xl font-semibold mb-6 text-center">
-                    Liste des rendez-vous
-                </h2>
-                <div className="h-[500px]">
-                    <DataGrid
-                        rows={rows}
-                        columns={columns}
-                        getRowId={row => row.ID_RDV}
-                        pageSize={5}
-                    />
-                </div>
-            </div>
-        </div>
+        <Box p={4}>
+            <Typography variant="h4" mb={2}>Liste des rendez-vous</Typography>
+            <Box sx={{ height: 450, width: '100%' }}>
+                <DataGrid
+                    rows={rows}
+                    columns={columns}
+                    getRowId={(row) => row.ID_RDV}
+                    pageSize={5}
+                />
+            </Box>
+        </Box>
     );
 }

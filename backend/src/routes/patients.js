@@ -19,7 +19,7 @@ router.get('/:id', async (req, res) => {
     const conn = await getConnection();
     const { rows } = await conn.execute(
         `SELECT * FROM PATIENT WHERE ID_PATIENT = :id`,
-        [req.params.id]
+        [+req.params.id]               // on force la conversion en number
     );
     await conn.close();
     if (!rows.length) return res.sendStatus(404);
@@ -48,12 +48,18 @@ router.put('/:id', async (req, res) => {
     const conn = await getConnection();
     const result = await conn.execute(
         `UPDATE PATIENT
-       SET NOM = :nom,
-           PRENOM = :prenom,
-           ADRESSE = :adresse,
+       SET NOM       = :nom,
+           PRENOM    = :prenom,
+           ADRESSE   = :adresse,
            TELEPHONE = :tel
      WHERE ID_PATIENT = :id`,
-        { nom, prenom, adresse, tel: telephone, id: req.params.id },
+        {
+            nom,
+            prenom,
+            adresse,
+            tel: telephone,
+            id: +req.params.id
+        },
         { autoCommit: true }
     );
     await conn.close();
@@ -63,16 +69,19 @@ router.put('/:id', async (req, res) => {
 
 // DELETE patient
 router.delete('/:id', async (req, res) => {
+    const id = +req.params.id;
     const conn = await getConnection();
     const result = await conn.execute(
         `DELETE FROM PATIENT WHERE ID_PATIENT = :id`,
-        [req.params.id],
+        [id],
         { autoCommit: true }
     );
     await conn.close();
-    if (result.rowsAffected === 0) return res.sendStatus(404);
-    res.json({ message: 'Patient supprimé' });
+    if (result.rowsAffected === 0) {
+        return res.sendStatus(404);
+    }
+    // renvoyer 204 No Content pour signifier "OK, rien à renvoyer"
+    res.sendStatus(204);
 });
 
-// **EXPORT** du router en ES-Module
 export default router;

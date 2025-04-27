@@ -27,23 +27,20 @@ export default function RendezvousForm() {
                         id_medecin: ID_MEDECIN
                     });
                 })
-                .catch(err => console.error(err));
+                .catch(console.error);
         }
     }, [id, isEdit]);
 
-    const handleChange = (e) => {
+    const handleChange = e => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        setForm(f => ({ ...f, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async e => {
         e.preventDefault();
         try {
-            if (isEdit) {
-                await client.put(`/rendezvous/${id}`, form);
-            } else {
-                await client.post('/rendezvous', form);
-            }
+            if (isEdit) await client.put(`/rendezvous/${id}`, form);
+            else await client.post('/rendezvous', form);
             navigate('/rendezvous');
         } catch (err) {
             console.error(err);
@@ -53,13 +50,13 @@ export default function RendezvousForm() {
     return (
         <div className="p-4 max-w-md mx-auto">
             <h2 className="text-xl font-semibold mb-4">
-                {isEdit ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'}
+                {isEdit ? 'Modifier un rendez-vous' : 'Nouveau rendez-vous'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <TextField
                     fullWidth
-                    label="Date"
                     type="date"
+                    label="Date"
                     name="date_rdv"
                     value={form.date_rdv}
                     onChange={handleChange}
@@ -68,17 +65,17 @@ export default function RendezvousForm() {
                 />
                 <TextField
                     fullWidth
-                    label="Heure (HH:MM)"
+                    label="Heure"
                     name="heure_rdv"
                     value={form.heure_rdv}
                     onChange={handleChange}
+                    placeholder="HH:MM"
                     required
                 />
                 <TextField
                     fullWidth
                     label="ID Patient"
                     name="id_patient"
-                    type="number"
                     value={form.id_patient}
                     onChange={handleChange}
                     required
@@ -87,7 +84,6 @@ export default function RendezvousForm() {
                     fullWidth
                     label="ID Médecin"
                     name="id_medecin"
-                    type="number"
                     value={form.id_medecin}
                     onChange={handleChange}
                     required
